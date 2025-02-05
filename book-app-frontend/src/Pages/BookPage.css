@@ -1,0 +1,318 @@
+.book-page {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(11, 107, 11); 
+    background-repeat: no-repeat; 
+    background-size: auto 100%; 
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  
+  
+  .header-icons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    z-index: 10;
+  }
+  
+  .home-icon,
+  .music-icon {
+    font-size: 34px;
+    color: #5B87E1;
+    cursor: pointer;
+    background-color: rgba(229, 244, 229, 0.8);
+    border-radius: 100%;
+  }
+
+  /* .music-icon{
+    margin-top: -10px;
+  } */
+
+  .home-icon{
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .page-number {
+    font-size: 20px;
+    font-weight: bold;
+    color: #5B87E1;
+    background-color: rgba(229, 244, 229, 0.8);
+    padding: 0px 10px;
+    border-radius: 30px;
+  }
+  
+  .action-icons {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .action-icons i {
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 50%;
+    margin-left: 10rem;
+    background-color: rgba(168, 176, 168, 0.9);
+  }
+  
+  .navigation-buttons {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+  }
+  
+  .nav-btn {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #000000;
+    font-size: 16px;
+    font-weight: bolder;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  
+  .nav-btn.left-btn {
+    position: absolute;
+    left: 20px;
+  }
+  
+  .nav-btn.right-btn {
+    position: absolute;
+    right: 20px;
+  }
+  
+  .page-text {
+    font-size: 18px;
+    color: rgb(15, 15, 15);
+    background-color: rgba(237, 233, 233, 0.8);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 80%;
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: -25px;
+  }
+  .left-icon-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    padding-left: 2rem;
+  }
+
+  .page-text p {
+    margin: 10px 0;
+  }
+
+  /* Modal Customization */
+.custom-popup {
+    background-color: #5f55ed !important; /* Light blue background */
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid white !important;
+    position: relative;
+  }
+  
+  /* Title Styling */
+  .custom-title {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    color: white; /* White text color */
+    border: none;
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+    /* border-bottom: solid red 1px; */
+  }
+  
+  /* Button No Styling */
+  .custom-btn-no {
+    background-color: #4a9bc4; /* Blue button background */
+    color: white; /* White text */
+    /* border: solid red 1px !important; */
+    border-radius: 25px; /* Rounded button */
+    padding: 10px 25px;
+    font-weight: bold;
+    font-size: 18px;
+    border: none;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    width: 250px;
+  }
+  
+  .custom-btn-no:hover {
+    background-color: #3fb0e6; /* Slightly darker blue on hover */
+  }
+  
+  /* Button Yes Styling */
+  .custom-btn-yes {
+    background-color: #ffab42; /* Orange button background */
+    color: white;
+    border-radius: 25px;
+    padding: 10px 25px;
+    font-weight: bold;
+    font-size: 18px;
+    border: none;
+    transition: all 0.3s ease;
+    width: 250px;
+  }
+  
+  .custom-btn-yes:hover {
+    background-color: #e69a3a; /* Slightly darker orange on hover */
+  }
+  
+  /* Adjust buttons spacing */
+  .modal-body {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* border-bottom: solid red 5px; */
+  }
+  
+  .modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* General Modal Styles */
+  .modal-content {
+    background: transparent;
+    border: none;
+  }
+  
+  /* To override Bootstrap modal backdrop color */
+  .modal-backdrop.show {
+    opacity: 0.7;
+    background-color: #000; /* Dark backdrop */
+  }
+  
+
+  /* Smooth fade-in for page elements */
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out;
+}
+
+/* Fade-in for icons in the middle */
+.fade-in-middle {
+  animation: fadeInMiddle 1s ease-in-out;
+}
+
+.fade-out-middle {
+  animation: fadeOutMiddle 0.5s ease-in-out;
+}
+
+/* Slide-down and slide-up animations */
+.slide-down {
+  animation: slideDown 1s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-in-out;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInMiddle {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOutMiddle {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
