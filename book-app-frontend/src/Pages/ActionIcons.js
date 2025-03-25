@@ -1,109 +1,143 @@
 import React, { useState, useEffect, useRef } from "react";
+import { VoiceRecorder } from "capacitor-voice-recorder";
+import "./BookPage.css";
 
 const ActionIcons = ({ bookId, pageNumber }) => {
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]); // Stores audio chunks
   const [isRecording, setIsRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState(""); // Audio URL state
+  const [audioURL, setAudioURL] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("book"); // Default to 'book' icon selected
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [audioNotFoundMessage, setAudioNotFoundMessage] = useState("");
   const audioRef = useRef(null);
 
-  // Cleanup the object URL to avoid memory leaks
   useEffect(() => {
     if (audioURL) {
       return () => {
-        URL.revokeObjectURL(audioURL); // Clean up the object URL
+        URL.revokeObjectURL(audioURL);
       };
     }
   }, [audioURL]);
 
-  // Start recording audio
+  const requestMicrophonePermission = async () => {
+    const permission = await VoiceRecorder.requestAudioRecordingPermission();
+    if (!permission.value) {
+      alert("Microphone permission is required to record audio.");
+      return false;
+    }
+    return true;
+  };
+
   const startRecording = async () => {
-    try {
-      setIsRecording(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" }); // Use 'audio/webm' instead of 'audio/wav'
-      const chunks = [];
+    const hasPermission = await requestMicrophonePermission();
+    if (!hasPermission) return;
 
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
+    setIsRecording(true);
+    setSelectedIcon("mic"); // Highlight the mic icon when recording
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/webm" }); // Save as .webm
-        setAudioChunks(chunks); // Store the chunks
-        const url = URL.createObjectURL(blob); // Create an object URL for playback
-        setAudioURL(url); // Set the audio URL for the player
-        setIsRecording(false); // Stop recording
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-    }
+    // IMPORTANT: Start the recording
+    await VoiceRecorder.startRecording();
   };
 
-  // Stop recording audio
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach((track) => track.stop()); // Stop all tracks
-      setIsRecording(false); // Stop the recording state
+  const stopRecording = async () => {
+    const result = await VoiceRecorder.stopRecording();
+    setIsRecording(false);
+
+    if (result.value && result.value.recordDataBase64) {
+      const audioBlob = new Blob(
+        [
+          new Uint8Array(
+            atob(result.value.recordDataBase64)
+              .split("")
+              .map((char) => char.charCodeAt(0))
+          ),
+        ],
+        { type: "audio/mp4" }
+      );
+
+      const audioURL = URL.createObjectURL(audioBlob);
+      setAudioURL(audioURL);
     }
+    setSelectedIcon(""); // Reset icon state after stopping
   };
 
-  // Delete the recorded audio
   const deleteAudio = () => {
-    setAudioURL(""); // Reset audio URL
-    setAudioChunks([]); // Reset audio chunks
+    setAudioURL("");
+    setSelectedIcon("book"); // Reset to "read" icon after deleting
   };
 
-  // Upload audio to the server
   const uploadAudio = async () => {
+    if (!audioURL) return;
+
+    const response = await fetch(audioURL);
+    const audioBlob = await response.blob();
+    const audioFile = new File([audioBlob], "recording.mp4", {
+      type: "audio/mp4",
+    });
+
     const formData = new FormData();
-    const audioBlob = new Blob(audioChunks, { type: "audio/webm" }); // Save as .webm
-    const audioFile = new File([audioBlob], "recording.webm", {
-      type: "audio/webm",
-    }); // Correct MIME type for .webm
+    formData.append("audio", audioFile);
+    formData.append("book_id", bookId);
+    formData.append("page_number", pageNumber);
 
-    formData.append("audio", audioFile); // Append audio to form data
-    formData.append("book_id", bookId); // Append book ID
-    formData.append("page_number", pageNumber); // Append page number
+    const userToken = localStorage.getItem("auth_token");
+    console.log("Auth Token:", userToken);
 
-    const userToken = localStorage.getItem("user_token");
+    if (!userToken) {
+      console.error("No auth token found!");
+      return;
+    }
 
     try {
-      const response = await fetch("http://localhost:8000/api/audio/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "https://kithia.com/website_b5d91c8e/api/audio/upload",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: formData,
+        }
+      );
 
-      const result = await response.json();
-      if (response.ok) {
-        console.log("Audio uploaded successfully", result);
-      } else {
-        console.error("Error uploading audio", result);
+      // Log status code
+      console.log("Response Status:", response.status);
+
+      // Log raw response text
+      const responseText = await response.text();
+      console.log("Raw Response:", responseText);
+
+      // Try parsing JSON
+      try {
+        const result = JSON.parse(responseText);
+        console.log("Parsed JSON Response:", result);
+
+        if (response.ok) {
+          setUploadSuccess(true);
+          setAudioURL("");
+          setSelectedIcon("book");
+          setTimeout(() => setUploadSuccess(false), 3000);
+        } else {
+          console.error("API Error:", result);
+        }
+      } catch (parseError) {
+        console.error("JSON Parsing Error:", parseError);
       }
     } catch (error) {
       console.error("Error uploading audio:", error);
     }
   };
 
-  const fetchAudio = async (bookId, pageNumber) => {
+  const fetchAudio = async () => {
     try {
-      const userToken = localStorage.getItem("user_token");
+      const userToken = localStorage.getItem("auth_token");
       if (!userToken) {
         console.error("No user token found in local storage");
         return;
       }
 
       const response = await fetch(
-        `http://localhost:8000/api/audio/${bookId}/${pageNumber}`,
+        `https://kithia.com/website_b5d91c8e/api/audio/${bookId}/${pageNumber}`,
         {
           method: "GET",
           headers: {
@@ -114,64 +148,78 @@ const ActionIcons = ({ bookId, pageNumber }) => {
       );
 
       const result = await response.json();
-      console.log("API Response:", result);
 
       if (response.ok) {
+        setAudioNotFoundMessage(""); // Clear any previous error message
         const audioUrl = result.audio_url;
-        console.log("Playing audio from:", audioUrl);
         const audio = new Audio(audioUrl);
+        setSelectedIcon("listen");
+        setIsAudioPlaying(true);
+
         audio.play();
+        audio.onended = () => {
+          setIsAudioPlaying(false);
+          setSelectedIcon("book");
+        };
       } else {
         console.error("Audio not found:", result.error);
+        if (result.error === "Audio not found") {
+          setAudioNotFoundMessage(
+            "No audio found! Record and upload an audio using the microphone icon."
+          );
+        }
       }
     } catch (error) {
       console.error("Error fetching audio:", error);
     }
   };
 
-  // Handle playback of the audio
-  const handleAudioPlay = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0; // Reset audio to start
-    }
-  };
-
   return (
     <div className="action-icons">
       <i
-        className="bi bi-mic red-icon"
+        className={`bi bi-book ${selectedIcon === "book" ? "green-icon" : ""}`}
+        onClick={() => setSelectedIcon("book")}
+        title="Read"
+      ></i>
+
+      <i
+        className={`bi bi-mic ${selectedIcon === "mic" ? "green-icon" : ""}`}
         onClick={startRecording}
         title="Record"
       ></i>
-      <i
-        className="bi bi-stop red-icon"
-        onClick={stopRecording}
-        title="Stop"
-      ></i>
 
-      {/* Conditionally render audio player only if audioURL is available */}
-      {audioURL && !isRecording && (
+      {isRecording && (
+        <i
+          className="bi bi-stop red-background"
+          onClick={stopRecording}
+          title="Stop"
+        ></i>
+      )}
+
+      {audioURL && (
         <div className="playback-controls">
-          <audio
-            ref={audioRef}
-            src={audioURL}
-            controls
-            onPlay={handleAudioPlay} // Reset currentTime when played
-            onLoadedMetadata={() => {
-              if (audioRef.current) {
-                audioRef.current.currentTime = Number.MAX_SAFE_INTEGER; // Avoid indefinite duration issue
-              }
-            }}
-          />
-          <button onClick={uploadAudio}>Upload</button>
-          <button onClick={deleteAudio}>Delete</button>
+          <audio ref={audioRef} src={audioURL} controls />
+          <button className="styled-button upload-btn" onClick={uploadAudio}>
+            Upload
+          </button>
+          <button className="styled-button delete-btn" onClick={deleteAudio}>
+            Delete
+          </button>
         </div>
       )}
+
       <i
-        className="bi bi-headphones red-icon"
-        onClick={() => fetchAudio(bookId, pageNumber)}
+        className={`bi bi-headphones ${isAudioPlaying ? "green-icon" : ""}`}
+        onClick={fetchAudio}
         title="Listen"
       ></i>
+
+      {uploadSuccess && (
+        <p className="upload-success-message">Upload Successful!</p>
+      )}
+      {audioNotFoundMessage && (
+        <p className="audio-not-found-message">{audioNotFoundMessage}</p>
+      )}
     </div>
   );
 };

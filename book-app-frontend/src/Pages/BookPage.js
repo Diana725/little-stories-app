@@ -3,29 +3,39 @@ import { useParams, useNavigate } from "react-router-dom";
 import "./BookPage.css";
 import ActionIcons from "./ActionIcons";
 
-const BookPage = () => {
+const BookPage = ({ toggleMusic, isMusicPlaying }) => {
   const { bookId, pageId } = useParams();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [bookPages, setBookPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(null);
-  const [isNextPageImagePreloaded, setIsNextPageImagePreloaded] =
-    useState(false);
+  const [preloadedImages, setPreloadedImages] = useState({});
 
-  const imageBaseUrl = "http://127.0.0.1:8000/";
+  const imageBaseUrl =
+    "https://kithia.com/website_b5d91c8e/book-backend/public/";
 
   useEffect(() => {
-    // Fetch the book pages from the API
     const fetchBookPages = async () => {
+      const cachedPages = localStorage.getItem(`bookPages_${bookId}`);
+
+      if (cachedPages) {
+        // console.log("Loaded pages from cache");
+        setBookPages(JSON.parse(cachedPages));
+        return;
+      }
+
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/books/${bookId}/pages`
+          `https://kithia.com/website_b5d91c8e/api/books/${bookId}/pages`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch pages");
         }
         const data = await response.json();
+        console.log("Fetched pages from API:", data);
+
         setBookPages(data);
+        localStorage.setItem(`bookPages_${bookId}`, JSON.stringify(data));
       } catch (error) {
         console.error("Error fetching book pages:", error);
       }
@@ -35,43 +45,64 @@ const BookPage = () => {
   }, [bookId]);
 
   useEffect(() => {
-    // Find the current page by the pageId from the URL
-    const page = bookPages.find(
+    if (!bookPages.length) return;
+
+    const newPage = bookPages.find(
       (page) => page.page_number === parseInt(pageId)
     );
-    setCurrentPage(page);
-  }, [bookPages, pageId]);
+    if (!newPage) return;
+
+    setCurrentPage(newPage);
+
+    if (preloadedImages[newPage.page_number]) return;
+    const img = new Image();
+    img.src = `${imageBaseUrl}${newPage.image}`;
+    img.onload = () => {
+      setPreloadedImages((prev) => ({
+        ...prev,
+        [newPage.page_number]: img.src,
+      }));
+    };
+  }, [bookPages, pageId, preloadedImages]);
 
   useEffect(() => {
-    // Preload the next page image (for smoother transitions)
-    if (bookPages.length > 0) {
-      const nextPage = bookPages.find(
-        (page) => page.page_number === parseInt(pageId) + 1
-      );
+    if (!bookPages.length) return;
 
-      if (nextPage?.image && !isNextPageImagePreloaded) {
+    const nextPage = bookPages.find(
+      (page) => page.page_number === parseInt(pageId) + 1
+    );
+    const prevPage = bookPages.find(
+      (page) => page.page_number === parseInt(pageId) - 1
+    );
+
+    const preloadImage = (page) => {
+      if (page?.image && !preloadedImages[page.page_number]) {
         const img = new Image();
-        img.src = `${imageBaseUrl}${nextPage.image}`;
+        img.src = `${imageBaseUrl}${page.image}`;
         img.onload = () => {
-          setIsNextPageImagePreloaded(true);
+          setPreloadedImages((prev) => ({
+            ...prev,
+            [page.page_number]: img.src,
+          }));
         };
       }
-    }
-  }, [bookPages, pageId, isNextPageImagePreloaded]);
+    };
 
+    preloadImage(nextPage);
+    preloadImage(prevPage);
+  }, [bookPages, pageId]);
+
+  // Handle page navigation without causing full reload
   const goToPage = (newPageId) => {
     navigate(`/book/${bookId}/${newPageId}`);
   };
 
-  // Split the text by periods for displaying each sentence on its own line
-  const sentences = currentPage?.words?.split(/\. ?/).filter(Boolean);
+  const sentences = currentPage?.words?.split(/\. ?/).filter(Boolean) || [];
 
-  // Function to show the modal when the home icon is clicked
   const handleHomeClick = () => {
     setShowModal(true);
   };
 
-  // Function to close the modal and navigate to home
   const handleConfirmHomeNavigation = () => {
     setShowModal(false);
     navigate("/");
@@ -81,9 +112,10 @@ const BookPage = () => {
     <div
       className="book-page"
       style={{
-        backgroundImage: currentPage?.image
-          ? `url("${imageBaseUrl}${currentPage.image}")`
-          : "none",
+        backgroundImage: `url("${
+          preloadedImages[currentPage?.page_number] ||
+          (currentPage?.image ? `${imageBaseUrl}${currentPage.image}` : "")
+        }")`,
         objectFit: "fill",
       }}
     >
@@ -98,7 +130,12 @@ const BookPage = () => {
             {pageId}/{bookPages.length}
           </div>
         </div>
-        <i className="bi bi-music-note-beamed music-icon"></i>
+        <i
+          className={`bi ${
+            isMusicPlaying ? "bi-music-note-list" : "bi-music-note"
+          } music-icon bookpage-music`}
+          onClick={toggleMusic}
+        ></i>
       </div>
 
       {/* Floating Action Icons */}
@@ -106,33 +143,43 @@ const BookPage = () => {
 
       {/* Floating Navigation Buttons */}
       <div className="navigation-buttons">
-        {parseInt(pageId) > 1 && (
-          <button
-            className="nav-btn left-btn"
-            onClick={() => goToPage(parseInt(pageId) - 1)}
-          >
-            <i
-              className="bi bi-chevron-left"
-              style={{ fontSize: "1.8rem" }}
-            ></i>
-          </button>
-        )}
-        <div className="page-text">
-          {sentences?.map((sentence, index) => (
-            <p key={index}>{sentence.trim()}.</p> // Add back period and display each sentence on its own line
-          ))}
+        <div className="navigation-buttons">
+          {parseInt(pageId) > 1 && (
+            <button
+              className="nav-btn left-btn"
+              onClick={() => goToPage(parseInt(pageId) - 1)}
+            >
+              <i
+                className="bi bi-chevron-left"
+                style={{ fontSize: "1.8rem" }}
+              ></i>
+            </button>
+          )}
+
+          {/* Book Text Display */}
+          <div className="page-text">
+            {sentences.length > 0 ? (
+              sentences.map((sentence, index) => (
+                <p key={index}>{sentence.trim()}.</p>
+              ))
+            ) : (
+              <p></p>
+            )}
+          </div>
+
+          {parseInt(pageId) <
+            Math.max(...bookPages.map((page) => page.page_number)) && (
+            <button
+              className="nav-btn right-btn"
+              onClick={() => goToPage(parseInt(pageId) + 1)}
+            >
+              <i
+                className="bi bi-chevron-right"
+                style={{ fontSize: "1.8rem" }}
+              ></i>
+            </button>
+          )}
         </div>
-        {parseInt(pageId) < bookPages.length && (
-          <button
-            className="nav-btn right-btn"
-            onClick={() => goToPage(parseInt(pageId) + 1)}
-          >
-            <i
-              className="bi bi-chevron-right"
-              style={{ fontSize: "1.8rem" }}
-            ></i>
-          </button>
-        )}
       </div>
 
       {/* Bootstrap Modal */}

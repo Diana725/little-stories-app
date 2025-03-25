@@ -22,7 +22,7 @@ const PageUploadForm = () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/books/${bookId}/pages`,
+        `https://kithia.com/website_b5d91c8e/api/books/${bookId}/pages`,
         {
           method: "POST",
           body: formData,

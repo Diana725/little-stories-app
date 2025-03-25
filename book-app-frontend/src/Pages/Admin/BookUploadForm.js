@@ -18,10 +18,13 @@ const BookUploadForm = () => {
     formData.append("cover_image", coverImage);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/books", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://kithia.com/website_b5d91c8e/api/books",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();

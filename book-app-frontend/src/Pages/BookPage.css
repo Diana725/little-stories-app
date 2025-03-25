@@ -36,21 +36,32 @@
   /* .music-icon{
     margin-top: -10px;
   } */
+  .bookpage-music{
+   position: absolute;
+    top: 20px;
+    right: 20px;
+   }
 
   .home-icon{
+    position: absolute;
     width: 50px;
     height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
+    left: 30px;
+    top: 7px;
   }
   .page-number {
+    position: absolute;
     font-size: 20px;
     font-weight: bold;
     color: #5B87E1;
     background-color: rgba(229, 244, 229, 0.8);
     padding: 0px 10px;
     border-radius: 30px;
+    left: 15px;
+    top: 70px;
   }
   
   .action-icons {
@@ -59,24 +70,97 @@
     top: 50%;
     transform: translateY(-50%);
     display: flex;
+    
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
+  }
+
+  .upload-success-message {
+    color: white;
+    margin-top: 5px;
+    font-size: 0.9rem;
+  }
+  .audio-not-found-message{
+    color: white;
+    margin-top: 5px;
+    font-size: 0.9rem;
+  }
+  
+  .active-icon {
+    background-color: green; /* Make the active icon background green */
   }
   
   .action-icons i {
-    font-size: 32px;
+    font-size: 20px;
+    width: 40px;
+    margin-left: 90px;
+    height: 45px;
     color: white;
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.5);
     padding: 10px;
     border-radius: 50%;
-    margin-left: 10rem;
-    background-color: rgba(168, 176, 168, 0.9);
+    transition: background-color 0.3s ease;
   }
+  .green-icon {
+    background-color: #28a745 !important;
+    color: white;
+    border-radius: 50%;
+    padding: 5px;
+  }
+  
+  .red-background {
+    background-color: #dc3545 !important;
+    color: white;
+    border-radius: 50%;
+    padding: 5px;
+  }
+  .red-icon {
+    background-color: rgb(255, 0, 0); /* Highlight mic, stop, and headphones when active */
+  }
+  
+  .red-background {
+    background-color: red; /* Background for stop recording */
+  }
+  
+  .selected-icon {
+    background-color: rgb(11, 107, 11); /* Green when selected */
+  }
+  
+  .playback-controls {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .styled-button {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .styled-button:hover {
+    background-color: rgba(50, 50, 50, 0.8); /* Slight hover effect for better UX */
+  }
+  
+  .upload-btn {
+    background-color: rgb(11, 107, 11); /* Green button for upload */
+  }
+  
+  .delete-btn {
+    background-color: red; /* Red button for delete */
+  }  
+  
   
   .navigation-buttons {
     position: absolute;
-    bottom: 20px;
+    bottom: 10px;
+    right: 1px;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -117,7 +201,7 @@
     display: block;
     width: 100%;
     height: auto;
-    margin-bottom: -25px;
+    margin-bottom: -35px;
   }
   .left-icon-container{
     display: flex;
